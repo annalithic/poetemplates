@@ -32,18 +32,11 @@ typedef struct (byte version) {
     int norm;
     //if(version < 9) 
     int tan;
-    if(version != 48) { 
+    if((version & 8) > 0) { 
         hfloat u <bgcolor=cDkBlue>;
         hfloat v <bgcolor=cDkBlue>;
     }
-    if(version == 57) {
-        hfloat u2;
-        hfloat v2;   
-    }
-    if (version == 58) {
-        int unk;    
-    }
-    if (version == 60 || version == 61 || version == 62) {
+    if ((version & 4) > 0) {
         ubyte b1;
         ubyte b2;
         ubyte b3;
@@ -53,11 +46,18 @@ typedef struct (byte version) {
         ubyte w3;
         ubyte w4;
     }
-    if (version == 61 || version == 62) {
-        int unk;    
+    if((version & 1) > 0) {
+        hfloat u2;
+        hfloat v2;   
     }
-    if(version == 120) {
-        byte unk2[4];  
+    if ((version & 2) > 0) {
+        ubyte r;
+        ubyte g;
+        ubyte b;
+        ubyte a;
+    }    
+    if ((version & 64) > 0) {
+        int unk64;
     }
     
 } Vert <read=VertRead>;
@@ -156,6 +156,7 @@ typedef struct {
     hfloat v2;
 } Vert57 <read=Vert57Read>;
 
+
 string Vert57Read(Vert57& v) {
     string s;
     SPrintf(s, "%4.0f %4.0f %4.0f | %f %f", v.x, v.y, v.z, v.u, v.v);
@@ -170,7 +171,7 @@ struct Mesh(int format, int triCount, int vertCount, int shapeCount) {
     if(vertCount > 65535) uint idx[triCount * 3];
     else ushort idx[triCount * 3] <bgcolor=cDkAqua>;
     Vert verts(format)[vertCount];
-    if(format == 120) {
+    if(format >= 120) {
         struct {
             BBox bbox;
             int unk1;
@@ -187,8 +188,10 @@ struct Model {
     short version;
     byte meshCount;
     short shapeCount;
-    int format;
-
+    byte format;
+    byte unk1;
+    short unk2;
+    
     struct {
         int triCount;
         int vertCount;
@@ -202,6 +205,11 @@ struct Model {
     if (version == 4) {
         int unk[meshCount];
     }
+    
+    //if(format >= 121) {
+    //    Vert vert2s(61)[shapeCount];
+    //}
+    
     //struct (int version, int ground){
     //    short a;
     //    if(version >= 13 && ground == 0) int b;

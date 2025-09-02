@@ -40,7 +40,7 @@ string vec4Read(vec4& v) {
 }
 
 
-typedef struct {
+typedef struct (int version) {
     byte sibling;
     byte child;
     vec4 a;
@@ -48,7 +48,7 @@ typedef struct {
     vec4 c;
     vec4 d;
     byte nameLength;
-    byte unkasdas;
+    if(version > 7) byte unkasdas;
     char name[nameLength] <bgcolor=cDkGreen>;
 }Joint <read=JointRead>;
 
@@ -73,14 +73,16 @@ typedef struct (int version){
     byte unk1;
     byte framerate;
     byte unk2;
-    if(version > 10) {
+    if(version >= 10) {
         byte unk3;
     }
     byte nameLength;
     if(version > 10) {
         byte parentNameLength;
     }
-    byte unk4[8];
+    if(version > 7) {
+        byte unk4[8];
+    }
     char name[nameLength] <bgcolor=cDkAqua>;
     if(version > 10) {
         char parentName[parentNameLength] <bgcolor=cAqua>;
@@ -96,14 +98,57 @@ string AnimationRead(Animation& animation) {
 byte version;
 ubyte jointCount;
 byte unk1;
-byte animationCount;
+ubyte animationCount;
 byte unk2[3];
 byte lightCount;
 
 struct {
-    Joint joints[jointCount] <optimize=false>;
+    Joint joints(version)[jointCount] <optimize=false>;
 } joints;
 
 Light lights(version)[lightCount] <optimize=false>;
 
 Animation animations(version)[animationCount] <optimize=false>;
+
+typedef struct {
+    float t;
+    float x;
+    float y;
+    float z;
+} vecKey;
+
+typedef struct {
+    float t;
+    float x;
+    float y;
+    float z;
+    float w;
+} quatKey;
+
+typedef struct (Animation& a, byte version) {
+    byte unk1;
+    int bone;
+    int scalesCount;
+    int rotationsCount;
+    int positionsCount;
+    int scalesCount2;
+    int rotationsCount2;
+    int positionsCount2;
+    if(version > 10) {
+        int unk2;
+    }
+    vecKey scales[scalesCount];
+    quatKey rotations[rotationsCount];
+    vecKey positions[positionsCount];
+    vecKey scales2[scalesCount2];
+    quatKey rotaions2[rotationsCount2];
+    vecKey positions2[positionsCount2];
+} Track;
+
+struct AnimationTracks(Animation& a, byte version) {
+    local int i = 0;
+    for(i = 0; i < a.tracks; i++) {
+        Track track(a, version);
+    }
+    
+};
